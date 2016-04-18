@@ -3,21 +3,18 @@
       "persistent": false,
       "scripts": [ "eventPage.js" ]
    },
-   "description": "Expands the YouTube Video to fill your entire web browser Window.",
+   "description": "Expands the YouTube Video to fill your entire content screen.",
+   "homepage_url": "https://github.com/ds-hwang/contentscreen_youtube.git",
    "icons": {
       "128": "YouTubeWindowExpander_128x128.png",
       "16": "YouTubeWindowExpander_16x16.png",
       "48": "YouTubeWindowExpander_48x48.png"
    },
-   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCai8/9cVR6hGF58+ByPr5FzarVIXEoj+wtBDMme1mE3KM2k1dMoFwKCqt/tj9o79GO2TYDlixNvaLcwpSDSL/ascE/wiFx+Qns0/5DP6835eyWD4gn5qiP/RBRhA2Y5rzvWtzXQhOv22UVS16KCAGKgOD6l8XXj53u/5CYXgyj8QIDAQAB",
    "manifest_version": 2,
-   "name": "Window Expander For YouTube",
-   "options_page": "options.html",
+   "name": "ContentScreen YouTube",
    "page_action": {
       "default_icon": "YouTubeWindowExpander_25x25.png"
    },
    "permissions": [ "tabs", "http://www.youtube.com/*", "https://www.youtube.com/*" ],
-   "update_url": "https://clients2.google.com/service/update2/crx",
-   "version": "2.3",
-   "web_accessible_resources": [ "resolution.js" ]
+   "version": "0.1"
 }

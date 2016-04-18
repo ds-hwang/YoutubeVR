@@ -4,62 +4,45 @@
 
 /**
  * Returns the youtube player object.
- * Note, the id of the youtube player object is different for 
- * embedded than full screen.
- * TODO: handle html5 players.
  * @return the player and null if doens't exist.
  */
-function getPlayer(){
-    //console.dir(document.getElementById("movie_player").getElementsByTagName("video")[0]);
-    // For now, detect that html5 video but since we are unable to get the player
-    // return null
-    if(document.getElementById("movie_player") != null && document.getElementById("movie_player").getElementsByTagName("video").length > 0){
-	return null;
-    }
-    var embeddedPlayer = document.getElementById("movie_player");
-    var fullScreenPlayer = document.getElementById("video-player-flash");
-    if(embeddedPlayer != null){
-	return embeddedPlayer;
-    }
-    if(fullScreenPlayer != null){
-	return fullScreenPlayer;
-    }
-    return null;
+function getPlayer() {
+    return document.getElementById("player-api");
 }
 
-/**
- * Returns the position in seconds of the youtube video.
- * @return the position in seconds.
- */
-function getSeekPosition(){
+function toggleFullscreen(fullscreen) {
     var player = getPlayer();
-    if(player == null){ 
-	return null;
+    var player_style = player.style;
+    if (fullscreen) {
+        player_style.position = "absolute";
+        var rect = player.getBoundingClientRect();
+        var transform_scalew = window.innerWidth / rect.width;
+        var transform_scaleh = window.innerHeight / rect.height;
+        player_style.transform = "scale(" + transform_scalew + ", " + transform_scaleh +")";
+        rect = player.getBoundingClientRect();
+        var target_x = (window.innerWidth - rect.width) / 2;
+        var target_y = (window.innerHeight - rect.height) / 2;
+        //player_style.left = (target_x - rect.left) + "px";
+        player_style.transform = "translate(" + (target_x - rect.left) + "px , " +
+            (target_y - rect.top) + "px) scale(" + transform_scalew + ", " + transform_scaleh +")";
+        player_style.zIndex = "19999999999999999999999";
+        document.body.style.overflow = "hidden"
+    } else {
+        player_style.transform = "";
+        player_style.zIndex = "";
+        player_style.position = "";
+        document.body.style.overflow = ""
     }
-    return player.getCurrentTime();
-}
-
-/**
- * Sets the seek of the video.
- * @param position the position in seconds to set the video.
- */
-function setSeekPosition(position){
-    var player = getPlayer();
-    if(player == null){ 
-	return null;
-    }
-    player.seekTo(position,true);
 }
 
 // send the response from finding a seek
-chrome.extension.sendMessage({message: "seekReady"});
+chrome.extension.sendMessage({message: "ready"});
 
 chrome.extension.onMessage.addListener(
     function(request, sender, sendResponse) {
-	if (request.message == "getSeek"){
-	    var optionsArray = [];
-	    optionsArray[0] = getSeekPosition();
-	    sendResponse({optionsArray: optionsArray});
+	if (request.message == "toggleFullscreen") {
+        toggleFullscreen(request.action);
+	    sendResponse({success: true});
 	}
     }
 );
