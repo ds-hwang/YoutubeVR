@@ -43,6 +43,10 @@ function toggleFullscreen() {
         player_style.zIndex = "2000000001";
 
         holder_style.position = "absolute";
+        holder_style.transform = "scale(" + transform_scalew + ", " + transform_scaleh +")";
+        rect = getPlayerHolder().getBoundingClientRect();
+        target_x = (window.innerWidth - rect.width) / 2;
+        target_y = (window.innerHeight - rect.height) / 2;
         holder_style.transform = "translate(" + (target_x - rect.left) + "px , " +
             (target_y - rect.top) + "px) scale(" + transform_scalew + ", " + transform_scaleh +")";
         holder_style.zIndex = "2000000000";
