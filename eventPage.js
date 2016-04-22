@@ -12,8 +12,6 @@
  **/
 var isResUpdated = false;
 
-var fullscreen = false;
-
 /**
  * The tab being operated on.
  */
@@ -24,10 +22,10 @@ var currentTab = null;
  * Sets the page icon for youtube.com and changes from max to min icons.
  **/
 function setIconForYouTube(tabId, changeInfo, tab) {
-	toggleIcon(tab);
+	toggleIcon(tab , false);
 }
 
-function toggleIcon(tab) {
+function toggleIcon(tab, fullscreen) {
     if (tab.url.indexOf("youtube.com") > 0 ){
 		if (fullscreen){
 		    localStorage["icon"] = "YouTubeWindowExpander_min_25x25.png";
@@ -53,15 +51,16 @@ chrome.pageAction.onClicked.addListener(function(tab) {
  **/
 chrome.extension.onMessage.addListener(
     function(request, sender, sendResponse) {
-	if(request.message == "ready") {
-	    chrome.tabs.sendMessage(currentTab.id, {message: "toggleFullscreen", action: !fullscreen}, 
-		function(response) {
-			if (response.success) {
-				fullscreen = !fullscreen;
-				toggleIcon(currentTab);
+	if(request.message == "ack") {
+	    chrome.tabs.sendMessage(currentTab.id, {message: "toggleFullscreen"},
+			function(response) {
+				if (!response.success) {
+					console.log("Something wrong happens.");
+				}
 			}
-		}
 	    );
+	} else if(request.message == "stateChanged") {
+		toggleIcon(currentTab, request.action);
 	} else if(request.message == "reset") {
 	    isResUpdated = false;
 	}

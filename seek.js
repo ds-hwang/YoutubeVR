@@ -2,6 +2,8 @@
  * GPL V3
  **/
 
+var fullscreen = false;
+
 /**
  * Returns the youtube player object.
  * @return the player and null if doens't exist.
@@ -14,10 +16,15 @@ function getPlayerHolder() {
     return document.getElementById("placeholder-player");
 }
 
-function toggleFullscreen(fullscreen) {
+function getVideo() {
+    return document.getElementsByTagName("video")[0];
+}
+
+function toggleFullscreen() {
     var player = getPlayer();
     var player_style = player.style;
     var holder_style = getPlayerHolder().style;
+    fullscreen = !fullscreen;
     if (fullscreen) {
         document.body.style.overflow = "hidden"
 
@@ -39,6 +46,8 @@ function toggleFullscreen(fullscreen) {
         holder_style.transform = "translate(" + (target_x - rect.left) + "px , " +
             (target_y - rect.top) + "px) scale(" + transform_scalew + ", " + transform_scaleh +")";
         holder_style.zIndex = "2000000000";
+
+        getVideo().addEventListener("ended", videoDone, true);
     } else {
         document.body.style.overflow = ""
 
@@ -49,16 +58,25 @@ function toggleFullscreen(fullscreen) {
         holder_style.position = "";
         holder_style.transform = "";
         holder_style.zIndex = "";
+
+        getVideo().removeEventListener("ended", videoDone, true);
     }
+    chrome.extension.sendMessage({message: "stateChanged", action: fullscreen});
 }
 
-// send the response from finding a seek
-chrome.extension.sendMessage({message: "ready"});
+function videoDone() {
+    console.log("videoDone.");
+    getVideo().removeEventListener("ended", videoDone, true);
+    toggleFullscreen();
+}
+
+// ready to process
+chrome.extension.sendMessage({message: "ack"});
 
 chrome.extension.onMessage.addListener(
     function(request, sender, sendResponse) {
 	if (request.message == "toggleFullscreen") {
-        toggleFullscreen(request.action);
+        toggleFullscreen();
 	    sendResponse({success: true});
 	}
     }
