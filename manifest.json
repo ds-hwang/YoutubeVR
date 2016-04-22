@@ -16,5 +16,5 @@
       "default_icon": "YouTubeWindowExpander_25x25.png"
    },
    "permissions": [ "tabs", "http://www.youtube.com/*", "https://www.youtube.com/*" ],
-   "version": "0.1"
+   "version": "0.1.1"
 }
