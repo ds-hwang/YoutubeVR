@@ -51,6 +51,7 @@ function toggleFullscreen() {
             (target_y - rect.top) + "px) scale(" + transform_scalew + ", " + transform_scaleh +")";
         holder_style.zIndex = "2000000000";
 
+        getVideo().focus();
         getVideo().addEventListener("ended", videoDone, true);
     } else {
         document.body.style.overflow = ""
