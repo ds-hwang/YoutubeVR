@@ -72,7 +72,9 @@ function toggleFullscreen() {
 function videoDone() {
     console.log("videoDone.");
     getVideo().removeEventListener("ended", videoDone, true);
-    toggleFullscreen();
+    if (fullscreen) {
+        toggleFullscreen();
+    }
 }
 
 // ready to process
