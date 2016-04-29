@@ -4,21 +4,27 @@
 
 var fullscreen = false;
 
-/**
- * Returns the youtube player object.
- * @return the player and null if doens't exist.
- */
+// subroot parent
 function getPlayer() {
     return document.getElementById("player-api");
 }
 
+// control many classes
+function getMoviePlayer() {
+    return document.getElementById("movie_player");
+// html5-video-player ytp-big-mode
+}
+
+// Video element itself
+function getVideo() {
+    return document.getElementsByTagName("video")[0];
+}
+
+// Black background
 function getPlayerHolder() {
     return document.getElementById("placeholder-player");
 }
 
-function getVideo() {
-    return document.getElementsByTagName("video")[0];
-}
 
 function toggleFullscreen() {
     var player = getPlayer();
@@ -51,6 +57,9 @@ function toggleFullscreen() {
             (target_y - rect.top) + "px) scale(" + transform_scalew + ", " + transform_scaleh +")";
         holder_style.zIndex = "2000000000";
 
+        getMoviePlayer().classList.remove("html5-video-player");
+        getMoviePlayer().classList.add("ytp-big-mode");
+
         getVideo().focus();
         getVideo().addEventListener("ended", videoDone, true);
     } else {
@@ -63,6 +72,9 @@ function toggleFullscreen() {
         holder_style.position = "";
         holder_style.transform = "";
         holder_style.zIndex = "";
+
+        getMoviePlayer().classList.add("html5-video-player");
+        getMoviePlayer().classList.remove("ytp-big-mode");
 
         getVideo().removeEventListener("ended", videoDone, true);
     }
