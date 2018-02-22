@@ -1,8 +1,6 @@
-# ContentScreen YouTube
-Expands the YouTube Video to fill your entire content screen
-
-# Download
-Please add [ContentScreen YouTube](https://chrome.google.com/webstore/detail/jbfionglllolfcnekdeladdcfcgpmcjp) to your Chrome :)
+# YouTubeVR
+Make Youtube 360 video VR-ed by desktop Chrome. 
 
 # Reference
-This project is based on [Window Expander For YouTube](https://chrome.google.com/webstore/detail/window-expander-for-youtu/fkpaakpeehepibjpdmoocdaonognfiog)
+* [ContentScreen YouTube](https://github.com/ds-hwang/contentscreen_youtube)
+* [webxr_youtube](https://github.com/ds-hwang/webxr_youtube)
