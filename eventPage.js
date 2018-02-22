@@ -14,7 +14,7 @@
       return;
     } else if (changeInfo.status == "complete") {
       currentTab = tab;
-      chrome.tabs.executeScript(tabId, {file : "seek.js"});
+      chrome.tabs.executeScript(tabId, {file : "seek.js", runAt: "document_end"});
     }
   }
 
@@ -52,7 +52,7 @@
   chrome.pageAction.onClicked.addListener(function(tab) {
     if (vrStatus_ == VR_STATUS.Disabled) {
       // Need to try again?
-      // chrome.tabs.executeScript(currentTab.id, {file : "seek.js"});
+      chrome.tabs.executeScript(currentTab.id, {file : "seek.js"});
       return;
     }
 

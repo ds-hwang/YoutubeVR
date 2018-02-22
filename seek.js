@@ -152,58 +152,58 @@
     }
 
     getVSShaderSource() {
-      "\
-      #version 300 es \
-      #define POSITION_LOCATION 0 \
-      #define TEXCOORD_LOCATION 1 \
-      #define TEX_OFFSET_LOCATION 2 \
-      \
-      precision highp float; \
-      precision highp int; \
-      \
-      uniform mat4 mvMatrix; \
-      uniform mat4 pMatrix; \
-      \
-      layout(location = POSITION_LOCATION) in vec3 position; \
-      layout(location = TEXCOORD_LOCATION) in vec2 texcoord; \
-      layout(location = TEX_OFFSET_LOCATION) in vec2 texOffset; \
-      \
-      out vec2 vUv; \
-      out vec2 vTexOffset; \
-      out vec3 vPosition; \
-      \
-      void main() { \
-        vUv = texcoord; \
-        vTexOffset = texOffset; \
-        vPosition = vec3(mvMatrix * vec4(position, 1.0)); \
-        gl_Position = pMatrix * mvMatrix * vec4(position, 1.0); \
+      return "\
+      #version 300 es \n\
+      #define POSITION_LOCATION 0 \n\
+      #define TEXCOORD_LOCATION 1 \n\
+      #define TEX_OFFSET_LOCATION 2 \n\
+      \n\
+      precision highp float; \n\
+      precision highp int; \n\
+      \n\
+      uniform mat4 mvMatrix; \n\
+      uniform mat4 pMatrix; \n\
+      \n\
+      layout(location = POSITION_LOCATION) in vec3 position; \n\
+      layout(location = TEXCOORD_LOCATION) in vec2 texcoord; \n\
+      layout(location = TEX_OFFSET_LOCATION) in vec2 texOffset; \n\
+      \n\
+      out vec2 vUv; \n\
+      out vec2 vTexOffset; \n\
+      out vec3 vPosition; \n\
+      \n\
+      void main() { \n\
+        vUv = texcoord; \n\
+        vTexOffset = texOffset; \n\
+        vPosition = vec3(mvMatrix * vec4(position, 1.0)); \n\
+        gl_Position = pMatrix * mvMatrix * vec4(position, 1.0); \n\
       }";
     }
 
     getFSShaderSource() {
-      "\
-      #version 300 es \
-      #define INV_PI_2 0.636619772 \
-      #define EPSILON 0.0005 \
-      precision highp float; \
-      precision highp int; \
-      precision highp sampler2D; \
-      \
-      uniform sampler2D sTexture; \
-      uniform vec2 uTexScale; \
-      \
-      in vec2 vUv; \
-      in vec2 vTexOffset; \
-      in vec3 vPosition; \
-      \
-      out vec4 color; \
-      \
-      void main() { \
-        vec2 homogeneouseUv = (vUv * 2.) - 1.; \
-        // Get UV on the EAC projection \
-        vec2 eacUv = (INV_PI_2 * atan(homogeneouseUv)) + 0.5; \
-        vec2 uvFor6Faces = (eacUv * uTexScale) + vTexOffset; \
-        color = texture(sTexture, uvFor6Faces); \
+      return "\
+      #version 300 es \n\
+      #define INV_PI_2 0.636619772 \n\
+      #define EPSILON 0.0005 \n\
+      precision highp float; \n\
+      precision highp int; \n\
+      precision highp sampler2D; \n\
+      \n\
+      uniform sampler2D sTexture; \n\
+      uniform vec2 uTexScale; \n\
+      \n\
+      in vec2 vUv; \n\
+      in vec2 vTexOffset; \n\
+      in vec3 vPosition; \n\
+      \n\
+      out vec4 color; \n\
+      \n\
+      void main() { \n\
+        vec2 homogeneouseUv = (vUv * 2.) - 1.; \n\
+        // Get UV on the EAC projection \n\
+        vec2 eacUv = (INV_PI_2 * atan(homogeneouseUv)) + 0.5; \n\
+        vec2 uvFor6Faces = (eacUv * uTexScale) + vTexOffset; \n\
+        color = texture(sTexture, uvFor6Faces); \n\
       }";
     }
 
@@ -499,19 +499,19 @@
   class WebVR {
     constructor() {
       this.vrStatus_ = VR_STATUS.Disabled;
-
-      chrome.extension.onMessage.addListener(
-          (request, sender, sendResponse) => {
-            if (request.message == "toggleVR") {
-              this.toggleVR(request.action);
-              sendResponse({success : true});
-            }
-          });
-
-      this.renderer_ = new Renderer(this.canVR());
-
       const status = this.canVR() ? VR_STATUS.Normal : VR_STATUS.Disabled;
       this.updateStatus(status);
+      if (status == VR_STATUS.Disabled)
+        return;
+
+      this.renderer_ = new Renderer(this.canVR());
+      chrome.extension.onMessage.addListener(
+        (request, sender, sendResponse) => {
+          if (request.message == "toggleVR") {
+            this.toggleVR(request.action);
+            sendResponse({success : true});
+          }
+        });
     }
 
     // Video element itself
