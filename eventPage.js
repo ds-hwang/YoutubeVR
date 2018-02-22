@@ -1,26 +1,10 @@
-/**
- * GPL V3
- **/
-
-/**
- * Parses the Youtube url and puts it into popup mode in the same tab
- * adds a listener to chrome.tabs.onUpdated.addListener(setIconForYouTube);
- **/
-
-/**
- * Used for checking when to update the resolution.
- **/
+// Used for checking when to update the resolution.
 var isResUpdated = false;
 
-/**
- * The tab being operated on.
- */
+// The tab being operated on.
 var currentTab = null;
 
-
-/**
- * Sets the page icon for youtube.com and changes from max to min icons.
- **/
+// Sets the page icon for youtube.com and changes from max to min icons.
 function setIconForYouTube(tabId, changeInfo, tab) {
 	toggleIcon(tab , false);
 }
@@ -28,11 +12,11 @@ function setIconForYouTube(tabId, changeInfo, tab) {
 function toggleIcon(tab, fullscreen) {
     if (tab.url.indexOf("youtube.com") > 0 ){
 		if (fullscreen){
-		    localStorage["icon"] = "images/min_25x25.png";
+		    localStorage["icon"] = "images/icon25_back.png";
 		    chrome.pageAction.setIcon({"tabId": tab.id, "path":localStorage["icon"]});
 		    chrome.pageAction.show(tab.id);
 		} else {
-		    localStorage["icon"] = "images/25x25.png";
+		    localStorage["icon"] = "images/icon25.png";
 		    chrome.pageAction.setIcon({"tabId": tab.id, "path":localStorage["icon"]});
 		    chrome.pageAction.show(tab.id);
 		}
