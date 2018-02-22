@@ -3,18 +3,18 @@
       "persistent": false,
       "scripts": [ "eventPage.js" ]
    },
-   "description": "Expands the YouTube Video to fill your entire content screen.",
-   "homepage_url": "https://github.com/ds-hwang/contentscreen_youtube.git",
+   "description": "Enabling Youtube 360 video VR-ed for HMD like Oculus and HTC Vive",
+   "homepage_url": "https://github.com/ds-hwang/YoutubeVR",
    "icons": {
       "128": "images/icon128.png",
       "16": "images/icon16.png",
       "48": "images/icon48.png"
    },
    "manifest_version": 2,
-   "name": "ContentScreen YouTube",
+   "name": "YouTubeVR",
    "page_action": {
       "default_icon": "images/icon25.png"
    },
    "permissions": [ "tabs", "http://www.youtube.com/*", "https://www.youtube.com/*" ],
-   "version": "0.2.1.0"
+   "version": "0.0.1.0"
 }
