@@ -6,14 +6,14 @@
    "description": "Expands the YouTube Video to fill your entire content screen.",
    "homepage_url": "https://github.com/ds-hwang/contentscreen_youtube.git",
    "icons": {
-      "128": "YouTubeWindowExpander_128x128.png",
-      "16": "YouTubeWindowExpander_16x16.png",
-      "48": "YouTubeWindowExpander_48x48.png"
+      "128": "images/128x128.png",
+      "16": "images/16x16.png",
+      "48": "images/48x48.png"
    },
    "manifest_version": 2,
    "name": "ContentScreen YouTube",
    "page_action": {
-      "default_icon": "YouTubeWindowExpander_25x25.png"
+      "default_icon": "images/25x25.png"
    },
    "permissions": [ "tabs", "http://www.youtube.com/*", "https://www.youtube.com/*" ],
    "version": "0.2.1.0"

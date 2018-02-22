@@ -28,11 +28,11 @@ function setIconForYouTube(tabId, changeInfo, tab) {
 function toggleIcon(tab, fullscreen) {
     if (tab.url.indexOf("youtube.com") > 0 ){
 		if (fullscreen){
-		    localStorage["icon"] = "YouTubeWindowExpander_min_25x25.png";
+		    localStorage["icon"] = "images/min_25x25.png";
 		    chrome.pageAction.setIcon({"tabId": tab.id, "path":localStorage["icon"]});
 		    chrome.pageAction.show(tab.id);
 		} else {
-		    localStorage["icon"] = "YouTubeWindowExpander_25x25.png";
+		    localStorage["icon"] = "images/25x25.png";
 		    chrome.pageAction.setIcon({"tabId": tab.id, "path":localStorage["icon"]});
 		    chrome.pageAction.show(tab.id);
 		}

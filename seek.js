@@ -22,7 +22,7 @@ function getVideo() {
 
 // Black background
 function getPlayerHolder() {
-    return document.getElementById("placeholder-player");
+    return document.getElementById("player-container");
 }
 
 
