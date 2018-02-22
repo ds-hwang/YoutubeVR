@@ -2,98 +2,63 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var fullscreen = false;
+!function() {
+  const VR_STATUS = {Disabled : 1, Normal : 2, VR : 3}
 
-// subroot parent
-function getPlayer() { return document.getElementById("player-api"); }
+  class WebVR {
+    constructor() {
+      this.vrStatus_ = VR_STATUS.Disabled;
 
-// control many classes
-function getMoviePlayer() {
-  return document.getElementById("movie_player");
-  // html5-video-player ytp-big-mode
-}
+      chrome.extension.onMessage.addListener(
+          (request, sender, sendResponse) => {
+            if (request.message == "toggleVR") {
+              this.toggleVR(request.action);
+              sendResponse({success : true});
+            }
+          });
 
-// Video element itself
-function getVideo() { return document.getElementsByTagName("video")[0]; }
+      // ready to process
+      this.updateStatus();
+    }
 
-// Black background
-function getPlayerHolder() {
-  return document.getElementById("player-container");
-}
+    // Video element itself
+    getVideo() { return document.getElementsByTagName("video")[0]; }
 
-function toggleFullscreen() {
-  var player = getPlayer();
-  var player_style = player.style;
-  var holder_style = getPlayerHolder().style;
-  fullscreen = !fullscreen;
-  if (fullscreen) {
-    document.body.style.overflow = "hidden"
+    canVR() {
+      // if (typeof VRFrameData === 'undefined')
+      //   return false;
+      return !!document.getElementsByClassName("webgl")[0];
+    }
 
-    player_style.position = "absolute";
-    var rect = player.getBoundingClientRect();
-    var transform_scalew = window.innerWidth / rect.width;
-    var transform_scaleh = window.innerHeight / rect.height;
-    var transform_scale = Math.min(transform_scalew, transform_scaleh);
-    player_style.transform =
-        "scale(" + transform_scale + ", " + transform_scale + ")";
-    rect = player.getBoundingClientRect();
-    var target_x = (window.innerWidth - rect.width) / 2;
-    var target_y = (window.innerHeight - rect.height) / 2;
-    // player_style.left = (target_x - rect.left) + "px";
-    player_style.transform = "translate(" + (target_x - rect.left) + "px , " +
-                             (target_y - rect.top) + "px) scale(" +
-                             transform_scale + ", " + transform_scale + ")";
-    player_style.zIndex = "2000000001";
+    toggleVR(status) {
+      this.vrStatus_ = status;
+      if (this.vrStatus_ == VR_STATUS.VR) {
+        console.log("toogleVR: VR");
+        // player_style.position = "absolute";
+        // getMoviePlayer().classList.remove("html5-video-player");
+        // getMoviePlayer().classList.add("ytp-big-mode");
 
-    holder_style.position = "absolute";
-    holder_style.transform =
-        "scale(" + transform_scalew + ", " + transform_scaleh + ")";
-    rect = getPlayerHolder().getBoundingClientRect();
-    target_x = (window.innerWidth - rect.width) / 2;
-    target_y = (window.innerHeight - rect.height) / 2;
-    holder_style.transform = "translate(" + (target_x - rect.left) + "px , " +
-                             (target_y - rect.top) + "px) scale(" +
-                             transform_scalew + ", " + transform_scaleh + ")";
-    holder_style.zIndex = "2000000000";
+        this.getVideo().focus();
+        this.getVideo().addEventListener("ended", _ => { this.videoDone(); },
+                                         {capture : false, once : true});
+      } else if (this.vrStatus_ == VR_STATUS.Normal) {
+        console.log("toogleVR: Normal");
+      }
+      chrome.extension.sendMessage(
+          {message : "stateChanged", action : this.vrStatus_});
+    }
 
-    getMoviePlayer().classList.remove("html5-video-player");
-    getMoviePlayer().classList.add("ytp-big-mode");
+    videoDone() {
+      if (this.vrStatus_ == VR_STATUS.Normal) {
+        this.toggleVR(VR_STATUS.VR);
+      }
+    }
 
-    getVideo().focus();
-    getVideo().addEventListener("ended", videoDone, true);
-  } else {
-    document.body.style.overflow = ""
-
-    player_style.transform = "";
-    player_style.zIndex = "";
-    player_style.position = "";
-
-    holder_style.position = "";
-    holder_style.transform = "";
-    holder_style.zIndex = "";
-
-    getMoviePlayer().classList.add("html5-video-player");
-    getMoviePlayer().classList.remove("ytp-big-mode");
-
-    getVideo().removeEventListener("ended", videoDone, true);
+    updateStatus() {
+      const status = this.canVR() ? VR_STATUS.Normal : VR_STATUS.Disabled;
+      chrome.extension.sendMessage({message : "stateChanged", action : status});
+    }
   }
-  chrome.extension.sendMessage({message : "stateChanged", action : fullscreen});
-}
 
-function videoDone() {
-  console.log("videoDone.");
-  getVideo().removeEventListener("ended", videoDone, true);
-  if (fullscreen) {
-    toggleFullscreen();
-  }
-}
-
-// ready to process
-chrome.extension.sendMessage({message : "ack"});
-
-chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
-  if (request.message == "toggleFullscreen") {
-    toggleFullscreen();
-    sendResponse({success : true});
-  }
-});
+  new WebVR();
+}();

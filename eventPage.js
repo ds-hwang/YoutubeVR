@@ -2,55 +2,74 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Used for checking when to update the resolution.
-var isResUpdated = false;
+!function() {
+  // The tab being operated on.
+  let currentTab = null;
+  const VR_STATUS = {Disabled : 1, Normal : 2, VR : 3};
+  let vrStatus_ = VR_STATUS.Disabled;
 
-// The tab being operated on.
-var currentTab = null;
+  function onUpdated(tabId, changeInfo, tab) {
+    if (changeInfo.status == "loading") {
+      updateIcon(tab, VR_STATUS.Disabled);
+      return;
+    } else if (changeInfo.status == "complete") {
+      currentTab = tab;
+      chrome.tabs.executeScript(tabId, {file : "seek.js"});
+    }
+  }
 
-// Sets the page icon for youtube.com and changes from max to min icons.
-function setIconForYouTube(tabId, changeInfo, tab) { toggleIcon(tab, false); }
-
-function toggleIcon(tab, fullscreen) {
-  if (tab.url.indexOf("youtube.com") > 0) {
-    if (fullscreen) {
-      localStorage["icon"] = "images/icon25_back.png";
-      chrome.pageAction.setIcon(
-          {"tabId" : tab.id, "path" : localStorage["icon"]});
-      chrome.pageAction.show(tab.id);
-    } else {
-      localStorage["icon"] = "images/icon25.png";
+  function updateIcon(tab, status) {
+    if (tab.url.indexOf("youtube.com") > 0) {
+      switch (status) {
+      case VR_STATUS.Disabled:
+        localStorage["icon"] = "images/icon25_disabled.png";
+        break;
+      case VR_STATUS.Normal:
+        localStorage["icon"] = "images/icon25.png";
+        break;
+      case VR_STATUS.VR:
+        localStorage["icon"] = "images/icon25_back.png";
+        break;
+      }
+      vrStatus_ = status;
       chrome.pageAction.setIcon(
           {"tabId" : tab.id, "path" : localStorage["icon"]});
       chrome.pageAction.show(tab.id);
     }
   }
-}
 
-// Called when user clicks on browser action
-chrome.pageAction.onClicked.addListener(function(tab) {
-  currentTab = tab;
-  // get the seek-time of the video if available
-  chrome.tabs.executeScript(tab.id, {file : "seek.js"});
-});
+  function nextAction() {
+    if (vrStatus_ == VR_STATUS.Normal) {
+      return VR_STATUS.VR;
+    } else if (vrStatus_ == VR_STATUS.VR) {
+      return VR_STATUS.Normal;
+    }
 
-/**
- * Setup a listener for handling requests from resolution.js.
- **/
-chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
-  if (request.message == "ack") {
-    chrome.tabs.sendMessage(currentTab.id, {message : "toggleFullscreen"},
-                            function(response) {
+    return VR_STATUS.Disabled;
+  }
+
+  // Called when user clicks on browser action
+  chrome.pageAction.onClicked.addListener(function(tab) {
+    if (vrStatus_ == VR_STATUS.Disabled)
+      return;
+
+    chrome.tabs.sendMessage(currentTab.id,
+                            {message : "toggleVR", action : nextAction()},
+                            (response) => {
                               if (!response.success) {
                                 console.log("Something wrong happens.");
                               }
                             });
-  } else if (request.message == "stateChanged") {
-    toggleIcon(currentTab, request.action);
-  } else if (request.message == "reset") {
-    isResUpdated = false;
-  }
-});
+  });
 
-// wait for a tab to open with a youtube url.
-chrome.tabs.onUpdated.addListener(setIconForYouTube);
+  // Setup a listener for handling requests from resolution.js.
+  chrome.extension.onMessage.addListener(function(request, sender,
+                                                  sendResponse) {
+    if (request.message == "stateChanged") {
+      updateIcon(currentTab, request.action);
+    }
+  });
+
+  // wait for a tab to open with a youtube url.
+  chrome.tabs.onUpdated.addListener(onUpdated);
+}();
