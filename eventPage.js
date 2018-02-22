@@ -50,8 +50,11 @@
 
   // Called when user clicks on browser action
   chrome.pageAction.onClicked.addListener(function(tab) {
-    if (vrStatus_ == VR_STATUS.Disabled)
+    if (vrStatus_ == VR_STATUS.Disabled) {
+      // Need to try again?
+      // chrome.tabs.executeScript(currentTab.id, {file : "seek.js"});
       return;
+    }
 
     chrome.tabs.sendMessage(currentTab.id,
                             {message : "toggleVR", action : nextAction()},
