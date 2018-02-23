@@ -38,7 +38,6 @@
     ]
   },
   "web_accessible_resources": [
-    "css/style.css",
     "images/youtube_button_36.png",
     "images/youtube_button_back_36.png"
   ]
