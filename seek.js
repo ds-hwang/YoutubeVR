@@ -56,7 +56,7 @@ function youtubeVrMain() {
   }
 
   class Renderer {
-    constructor(canVR) {
+    constructor() {
       this.canvas_ = document.createElement('canvas');
       this.onResize(100, 50);
       this.canvas_.style.display = "none";
@@ -66,11 +66,6 @@ function youtubeVrMain() {
       const isWebGL2 = !!this.gl_;
       if (!isWebGL2) {
         console.log('WebGL 2 is not available.');
-        return;
-      }
-
-      if (!canVR) {
-        console.log('WebVR is not available.');
         return;
       }
 
@@ -410,6 +405,12 @@ function youtubeVrMain() {
     initTexture() {
       // TODO(dshwang): handle the case in which video isn't loaded yet.
       const videoElement_ = this.getVideo();
+
+      if (this.texture_) {
+        this.gl_.deleteTexture(this.texture_);
+        this.texture_ = 0;
+      }
+
       // -- Init 2D Texture
       this.texture_ = this.gl_.createTexture();
       this.gl_.activeTexture(this.gl_.TEXTURE0);
@@ -427,6 +428,8 @@ function youtubeVrMain() {
       // -- Allocate storage for the texture
       this.gl_.texImage2D(this.gl_.TEXTURE_2D, 0, this.gl_.RGBA, this.gl_.RGBA,
                           this.gl_.UNSIGNED_BYTE, videoElement_);
+
+      this.initializedVideo_ = videoElement_;
     }
 
     getVideo() { return document.getElementsByTagName("video")[0]; }
@@ -440,6 +443,17 @@ function youtubeVrMain() {
                              this.gl_.UNSIGNED_BYTE, videoElement_);
     };
 
+    needInitTexture() {
+      if (!this.texture_)
+        return true;
+
+      const videoElement_ = this.getVideo();
+      if (!this.initializedVideo_ || (this.initializedVideo_ != videoElement_))
+        return true;
+
+      return false;
+    }
+
     isVrMode() {
       return this.vr_ && this.vr_.display && this.vr_.display.isPresenting;
     }
@@ -448,7 +462,7 @@ function youtubeVrMain() {
       if (!this.isVrMode())
         return;
 
-      if (!this.texture_) {
+      if (needInitTexture()) {
         this.initTexture();
       } else {
         this.updateTexture();
@@ -521,7 +535,7 @@ function youtubeVrMain() {
       }
 
       this.vrStatus_ = VR_STATUS.Normal;
-      this.renderer_ = new Renderer(this.canVR());
+      this.renderer_ = new Renderer();
       this.createPresentationButton();
     }
 
@@ -530,6 +544,11 @@ function youtubeVrMain() {
 
     getControlContainer() {
       return document.getElementsByClassName("ytp-right-controls")[0];
+    }
+
+    hasVrVideo() {
+      return !!document.getElementsByClassName("webgl")[0] ? VR_VIDEO.Exist
+                                                           : VR_VIDEO.NonExist;
     }
 
     canVR() { return !(typeof VRFrameData === 'undefined'); }
@@ -586,70 +605,17 @@ function youtubeVrMain() {
 }
 
 !function() {
-  const VR_VIDEO = {NonExist : 1, Exist : 2};
-  // 2 secs
-  const DISCOVERY_INTERVAL = 2000;
-  // 3 mins
-  const DISCOVERY_LIMIT = 3 * 60 * 1000 / DISCOVERY_INTERVAL;
-
   class WebVRContentScript {
     constructor() {
-      window.addEventListener("beforeunload", (event) => {
-        this.updateStatus(VR_VIDEO.NonExist);
-      });
-
-      chrome.extension.onMessage.addListener(
-          (request, sender, sendResponse) => {
-            if (request.message == "queryStatus") {
-              this.discoveryCount_ = 0;
-              this.startDiscoveryRoutine();
-            }
-          });
-
-      this.didInjected_ = false;
-      this.discoveryCount_ = 0;
-      this.initialize();
-    }
-
-    initialize() {
-      const status = this.hasVrVideo();
-      this.updateStatus(status);
-      if (status == VR_VIDEO.NonExist) {
-        this.startDiscoveryRoutine_ = this.startDiscoveryRoutine.bind(this);
-        setTimeout(this.startDiscoveryRoutine_, 2000);
-        return;
-      }
+      window.addEventListener("beforeunload",
+                              (event) => {
+                                  // this.updateStatus(VR_VIDEO.NonExist);
+                              });
 
       this.injectYoutubeVrMain();
-    }
-
-    startDiscoveryRoutine() {
-      const status = this.hasVrVideo();
-      if (status == VR_VIDEO.NonExist) {
-        ++this.discoveryCount_;
-        console.log("360Video still doesn't exist.");
-        if (this.discoveryCount_ < DISCOVERY_LIMIT)
-          setTimeout(this.startDiscoveryRoutine_, 2000);
-        return;
-      }
-      this.updateStatus(status);
-      this.injectYoutubeVrMain();
-    }
-
-    hasVrVideo() {
-      return !!document.getElementsByClassName("webgl")[0] ? VR_VIDEO.Exist
-                                                           : VR_VIDEO.NonExist;
-    }
-
-    updateStatus(status) {
-      chrome.extension.sendMessage({message : "stateChanged", action : status});
     }
 
     injectYoutubeVrMain() {
-      if (this.didInjected_)
-        return;
-
-      this.didInjected_ = true;
       this.script_ = document.createElement('script');
       this.script_.appendChild(
           document.createTextNode('(' + youtubeVrMain + ')();'));
