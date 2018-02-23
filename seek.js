@@ -499,27 +499,45 @@
   class WebVR {
     constructor() {
       this.vrStatus_ = VR_STATUS.Disabled;
-      const status = this.canVR() ? VR_STATUS.Normal : VR_STATUS.Disabled;
-      this.updateStatus(status);
-      if (status == VR_STATUS.Disabled)
+      if (!this.canVR()) {
+        console.log("WebVR isn't supported");
         return;
+      }
 
+      const status = this.is360Video() ? VR_STATUS.Normal : VR_STATUS.Disabled;
+      this.updateStatus(status);
+      if (!this.canVR() || status == VR_STATUS.Disabled) {
+        this.startDiscoveryRoutine_ = this.startDiscoveryRoutine.bind(this);
+        setTimeout(this.startDiscoveryRoutine_, 2000);
+        return;
+      }
+
+      this.createRenderer();
+    }
+
+    createRenderer() {
       this.renderer_ = new Renderer(this.canVR());
-      chrome.extension.onMessage.addListener(
-        (request, sender, sendResponse) => {
-          if (request.message == "toggleVR") {
-            this.toggleVR(request.action);
-            sendResponse({success : true});
-          }
-        });
+    }
+
+    startDiscoveryRoutine() {
+      if (!this.canVR() || !this.is360Video()) {
+        setTimeout(this.startDiscoveryRoutine_, 2000);
+        console.log("WebVR still isn't supported");
+        return;
+      }
+      this.vrStatus_ = VR_STATUS.Normal;
+      this.createRenderer();
+      this.updateStatus(status);
     }
 
     // Video element itself
     getVideo() { return document.getElementsByTagName("video")[0]; }
 
     canVR() {
-      if (typeof VRFrameData === 'undefined')
-        return false;
+      return !(typeof VRFrameData === 'undefined');
+    }
+
+    is360Video() {
       return !!document.getElementsByClassName("webgl")[0];
     }
 
