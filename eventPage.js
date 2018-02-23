@@ -4,72 +4,39 @@
 
 !function() {
   // The tab being operated on.
-  let currentTab = null;
-  const VR_STATUS = {Disabled : 1, Normal : 2, VR : 3};
-  let vrStatus_ = VR_STATUS.Disabled;
+  let currentTab_ = null;
+  const VR_VIDEO = {NonExist : 1, Exist : 2};
 
-  function onUpdated(tabId, changeInfo, tab) {
-    if (changeInfo.status == "loading") {
-      updateIcon(tab, VR_STATUS.Disabled);
-      return;
-    } else if (changeInfo.status == "complete") {
-      currentTab = tab;
-    }
-  }
-
-  function updateIcon(tab, status) {
+  function updateIcon(tab, hasVrVideo) {
     if (tab.url.indexOf("youtube.com") > 0) {
-      switch (status) {
-      case VR_STATUS.Disabled:
+      switch (hasVrVideo) {
+      case VR_VIDEO.NonExist:
         localStorage["icon"] = "images/icon25_disabled.png";
         break;
-      case VR_STATUS.Normal:
+      case VR_VIDEO.Exist:
         localStorage["icon"] = "images/icon25.png";
         break;
-      case VR_STATUS.VR:
-        localStorage["icon"] = "images/icon25_back.png";
-        break;
       }
-      vrStatus_ = status;
       chrome.pageAction.setIcon(
           {"tabId" : tab.id, "path" : localStorage["icon"]});
       chrome.pageAction.show(tab.id);
     }
   }
 
-  function nextAction() {
-    if (vrStatus_ == VR_STATUS.Normal) {
-      return VR_STATUS.VR;
-    } else if (vrStatus_ == VR_STATUS.VR) {
-      return VR_STATUS.Normal;
-    }
-
-    return VR_STATUS.Disabled;
-  }
-
-  // Called when user clicks on browser action
-  chrome.pageAction.onClicked.addListener(function(tab) {
-    if (vrStatus_ == VR_STATUS.Disabled) {
-      return;
-    }
-
-    chrome.tabs.sendMessage(currentTab.id,
-                            {message : "toggleVR", action : nextAction()},
-                            (response) => {
-                              if (!response.success) {
-                                console.log("Something wrong happens.");
-                              }
-                            });
-  });
-
   // Setup a listener for handling requests from resolution.js.
-  chrome.extension.onMessage.addListener(function(request, sender,
-                                                  sendResponse) {
+  chrome.extension.onMessage.addListener((request, sender, sendResponse) => {
     if (request.message == "stateChanged") {
-      updateIcon(currentTab, request.action);
+      updateIcon(currentTab_, request.action);
     }
   });
 
   // wait for a tab to open with a youtube url.
-  chrome.tabs.onUpdated.addListener(onUpdated);
+  chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status == "loading") {
+      updateIcon(tab, VR_VIDEO.NonExist);
+      return;
+    } else if (changeInfo.status == "complete") {
+      currentTab_ = tab;
+    }
+  });
 }();

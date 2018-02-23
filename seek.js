@@ -4,8 +4,14 @@
 
 'use strict';
 
-!function() {
-  const VR_STATUS = {Disabled : 1, Normal : 2, VR : 3}
+// --------- NOTE: THIS FUNCTION IS INJECTED INTO THE PAGE DIRECTLY ---------
+// It's because exmerimental API like VRFrameData doesn't work in content
+// script. :(
+function youtubeVrMain() {
+  const VR_STATUS = {
+    Normal : 1,
+    VR : 2
+  }
 
   // Youtube addes padding at the discontinuities
   const EPSILON = 0.0012;
@@ -71,7 +77,6 @@
       this.util = getUtil();
       this.initProgram();
       this.setVertexArray();
-      this.initTexture();
       this.vr_ = {display : null, frameData : new VRFrameData()};
 
       this.addVREventListeners();
@@ -109,7 +114,7 @@
     }
 
     getDisplays() {
-      return navigator.getVRDisplays().then(displays => {
+      return navigator.getVRDisplays().then((displays) => {
         // Filter down to devices that can present.
         displays = displays.filter(display => display.capabilities.canPresent);
 
@@ -122,11 +127,19 @@
         // Store the first display we find. A more production-ready version
         // should allow the user to choose from their available displays.
         this.vr_.display = displays[0];
-        this.createPresentationButton();
+
+        const leftEye = this.vr_.display.getEyeParameters('left');
+        const rightEye = this.vr_.display.getEyeParameters('right');
+        const width = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
+        const height = Math.max(leftEye.renderHeight, rightEye.renderHeight);
+        this.onResize(width, height);
       });
     }
 
     onResize(width, height) {
+      if (this.width_ == width && this.height_ == height)
+        return;
+
       this.width_ = width;
       this.height_ = height;
       this.canvas_.width = this.width_;
@@ -412,7 +425,7 @@
                              this.gl_.CLAMP_TO_EDGE);
 
       // -- Allocate storage for the texture
-      this.gl_.texImage2D(this.gl_.TEXTURE_2D, 0, this.gl_.RGB, this.gl_.RGB,
+      this.gl_.texImage2D(this.gl_.TEXTURE_2D, 0, this.gl_.RGBA, this.gl_.RGBA,
                           this.gl_.UNSIGNED_BYTE, videoElement_);
     }
 
@@ -423,7 +436,7 @@
       this.gl_.bindTexture(this.gl_.TEXTURE_2D, this.texture_);
       this.gl_.pixelStorei(this.gl_.UNPACK_FLIP_Y_WEBGL, false);
       this.gl_.texSubImage2D(this.gl_.TEXTURE_2D, 0, videoElement_.width,
-                             videoElement_.height, this.gl_.RGB,
+                             videoElement_.height, this.gl_.RGBA,
                              this.gl_.UNSIGNED_BYTE, videoElement_);
     };
 
@@ -435,7 +448,11 @@
       if (!this.isVrMode())
         return;
 
-      this.updateTexture();
+      if (!this.texture_) {
+        this.initTexture();
+      } else {
+        this.updateTexture();
+      }
       this.gl_.clear(this.gl_.COLOR_BUFFER_BIT);
 
       const EYE_WIDTH = this.width_ * 0.5;
@@ -498,53 +515,50 @@
 
   class WebVR {
     constructor() {
-      this.vrStatus_ = VR_STATUS.Disabled;
       if (!this.canVR()) {
         console.log("WebVR isn't supported");
         return;
       }
 
-      const status = this.is360Video() ? VR_STATUS.Normal : VR_STATUS.Disabled;
-      this.updateStatus(status);
-      if (!this.canVR() || status == VR_STATUS.Disabled) {
-        this.startDiscoveryRoutine_ = this.startDiscoveryRoutine.bind(this);
-        setTimeout(this.startDiscoveryRoutine_, 2000);
-        return;
-      }
-
-      this.createRenderer();
-    }
-
-    createRenderer() {
-      this.renderer_ = new Renderer(this.canVR());
-    }
-
-    startDiscoveryRoutine() {
-      if (!this.canVR() || !this.is360Video()) {
-        setTimeout(this.startDiscoveryRoutine_, 2000);
-        console.log("WebVR still isn't supported");
-        return;
-      }
       this.vrStatus_ = VR_STATUS.Normal;
-      this.createRenderer();
-      this.updateStatus(status);
+      this.renderer_ = new Renderer(this.canVR());
+      this.createPresentationButton();
     }
 
     // Video element itself
     getVideo() { return document.getElementsByTagName("video")[0]; }
 
-    canVR() {
-      return !(typeof VRFrameData === 'undefined');
+    getControlContainer() {
+      return document.getElementsByClassName("ytp-right-controls")[0];
     }
 
-    is360Video() {
-      return !!document.getElementsByClassName("webgl")[0];
+    canVR() { return !(typeof VRFrameData === 'undefined'); }
+
+    createPresentationButton() {
+      this.button_ = document.createElement('button');
+      this.button_.classList.add('ytp-button');
+      this.img_ = document.createElement("img");
+      this.img_.src = this.vrOnImage();
+      this.button_.appendChild(this.img_);
+      this.button_.addEventListener('click', _ => { this.toggleVR(); });
+      var parentElement = this.getControlContainer();
+      var theFirstButton = parentElement.firstChild;
+      parentElement.insertBefore(this.button_, theFirstButton);
     }
 
-    toggleVR(status) {
-      this.vrStatus_ = status;
+    vrOnImage() {
+      return 'data:image/png;base64,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';
+    }
+
+    vrOffImage() {
+      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4gIXBycOGGSliAAAAshJREFUWMPtlktolFcUx39njIYmJpoUhYhUqJYSdFHUjRbEhQuLFN0UfKyqtOuu2r1duHXrgy5URPCxEIr4WEkoCCEqQkEUCzFGa7AVtY1Jk/zcnMGv4yTTjBmFMgc+7us79/7v/7wuNKUp/zOJt1FWO4FSlaWxiBh9H4D6gWXAVMWehyJifz17trwlwx8BS6rMd9e7YcssGSHiX6ReAgReAP8A84B24HoNvbk1mbowTdUGdCaI+Qnu7/xGgMGIGJ8zj1dLaoe6VT2k3vZNmVInC99Uxfoz9Zy6U+1S5xeZq8lQmV71Y+B7YG/efhgYAO4CQ8Bj4GmaaxSYyIhrBRalb60APgXWA6vyiPPA8Yg4UwZU05zqMvX3vOFptVddpC6og+WWZLlXPVtg9dx0LFXbZCAVD8xE72yCodDfpI7l/rur/bwkkZ9Xd6s9hVt0z2UWLgNTD+YZfTk+oV5Qvy1lhGwHvgSeA1tSvx/4a07LwmtfuZppokdtBT4AtgJrK9P+L8Dn2f81HbURcg8YAzqAHqCvvFAENBkRT4A1Of4tIiYbBGg4GWoHlgLXKgHNA25kvytr04OGVfSIx8DLTKw9wK0ioLJhBzIDtyf64UaAKUTcQLarC77aWgL+APYDRxJtOzAO3G8QO0XHBvgsIqaA74CTleg3Z454onY18iGm7sjQ7y/OV0ZZG7AgfaqzwY/DjmwXzgRoME3YCXxVtnlFpq07S1fInmz7ahXXo8C+LJrfRMSpaQ5alcWzO5ktZd56noV3MCKGptHdBRzL4NkQETdr3erntO+EekVdl/MbczyR63+qd9QbWf9uqUPqeJaep+pP6rYs2L3q4cLT5IsZWUzzRPZ/yANepPKIelH9Wv3kP5iqLS/wo3pNfaiOJsjL6spqYKLGpouB5enowxHxqN6nqfphJt0A7kXE5Gz0m9KUpjTlXckr7/szubqtBtkAAAAASUVORK5CYII=';
+    }
+
+    toggleVR() {
+      this.vrStatus_ = this.nextAction();
       if (this.vrStatus_ == VR_STATUS.VR) {
         console.log("toogleVR: VR");
+        this.img_.src = this.vrOffImage();
         this.getVideo().focus();
         this.getVideo().addEventListener("ended", _ => {
           if (this.vrStatus_ == VR_STATUS.VR)
@@ -553,15 +567,71 @@
         this.renderer_.activateVR();
       } else if (this.vrStatus_ == VR_STATUS.Normal) {
         console.log("toogleVR: Normal");
+        this.img_.src = this.vrOnImage();
         this.renderer_.deactivateVR();
       }
-      this.updateStatus(this.vrStatus_);
+    }
+
+    nextAction() {
+      switch (this.vrStatus_) {
+      case VR_STATUS.Normal:
+        return VR_STATUS.VR;
+      case VR_STATUS.VR:
+        return VR_STATUS.Normal;
+      }
+    }
+  }
+
+  new WebVR();
+}
+
+!function() {
+  const VR_VIDEO = {NonExist : 1, Exist : 2};
+
+  class WebVRContentScript {
+    constructor() {
+      const status = this.hasVrVideo();
+      this.updateStatus(status);
+      if (status == VR_VIDEO.NonExist) {
+        this.startDiscoveryRoutine_ = this.startDiscoveryRoutine.bind(this);
+        setTimeout(this.startDiscoveryRoutine_, 2000);
+        return;
+      }
+
+      this.injectYoutubeVrMain();
+    }
+
+    startDiscoveryRoutine() {
+      const status = this.hasVrVideo();
+      if (status == VR_VIDEO.NonExist) {
+        setTimeout(this.startDiscoveryRoutine_, 2000);
+        console.log("360Video still doesn't exist.");
+        return;
+      }
+      this.updateStatus(status);
+      this.injectYoutubeVrMain();
+    }
+
+    hasVrVideo() {
+      return !!document.getElementsByClassName("webgl")[0] ? VR_VIDEO.Exist
+                                                           : VR_VIDEO.NonExist;
     }
 
     updateStatus(status) {
       chrome.extension.sendMessage({message : "stateChanged", action : status});
     }
+
+    injectYoutubeVrMain() {
+      var script = document.createElement('script');
+      script.appendChild(document.createTextNode('(' + youtubeVrMain + ')();'));
+      if (document.body || document.head || document.documentElement) {
+        // NOTE: only valid html documents get body/head, so this is a nice way
+        // to not inject on them
+        (document.body || document.head || document.documentElement)
+            .appendChild(script);
+      }
+    }
   }
 
-  new WebVR();
+  new WebVRContentScript();
 }();
