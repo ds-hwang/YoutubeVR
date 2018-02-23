@@ -587,9 +587,31 @@ function youtubeVrMain() {
 
 !function() {
   const VR_VIDEO = {NonExist : 1, Exist : 2};
+  // 2 secs
+  const DISCOVERY_INTERVAL = 2000;
+  // 3 mins
+  const DISCOVERY_LIMIT = 3 * 60 * 1000 / DISCOVERY_INTERVAL;
 
   class WebVRContentScript {
     constructor() {
+      window.addEventListener("beforeunload", (event) => {
+        this.updateStatus(VR_VIDEO.NonExist);
+      });
+
+      chrome.extension.onMessage.addListener(
+          (request, sender, sendResponse) => {
+            if (request.message == "queryStatus") {
+              this.discoveryCount_ = 0;
+              this.startDiscoveryRoutine();
+            }
+          });
+
+      this.didInjected_ = false;
+      this.discoveryCount_ = 0;
+      this.initialize();
+    }
+
+    initialize() {
       const status = this.hasVrVideo();
       this.updateStatus(status);
       if (status == VR_VIDEO.NonExist) {
@@ -604,8 +626,10 @@ function youtubeVrMain() {
     startDiscoveryRoutine() {
       const status = this.hasVrVideo();
       if (status == VR_VIDEO.NonExist) {
-        setTimeout(this.startDiscoveryRoutine_, 2000);
+        ++this.discoveryCount_;
         console.log("360Video still doesn't exist.");
+        if (this.discoveryCount_ < DISCOVERY_LIMIT)
+          setTimeout(this.startDiscoveryRoutine_, 2000);
         return;
       }
       this.updateStatus(status);
@@ -622,14 +646,14 @@ function youtubeVrMain() {
     }
 
     injectYoutubeVrMain() {
-      var script = document.createElement('script');
-      script.appendChild(document.createTextNode('(' + youtubeVrMain + ')();'));
-      if (document.body || document.head || document.documentElement) {
-        // NOTE: only valid html documents get body/head, so this is a nice way
-        // to not inject on them
-        (document.body || document.head || document.documentElement)
-            .appendChild(script);
-      }
+      if (this.didInjected_)
+        return;
+
+      this.didInjected_ = true;
+      this.script_ = document.createElement('script');
+      this.script_.appendChild(
+          document.createTextNode('(' + youtubeVrMain + ')();'));
+      document.body.appendChild(this.script_);
     }
   }
 
