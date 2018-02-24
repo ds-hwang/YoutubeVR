@@ -619,7 +619,7 @@ function youtubeVrMain() {
       this.script_ = document.createElement('script');
       this.script_.appendChild(
           document.createTextNode('(' + youtubeVrMain + ')();'));
-      document.body.appendChild(this.script_);
+      document.documentElement.appendChild(this.script_);
     }
   }
 
