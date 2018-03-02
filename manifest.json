@@ -32,6 +32,12 @@
       "all_frames" : false
     }
   ],
+  "background": {
+    "persistent": false,
+    "scripts": [
+      "eventPage.js"
+    ]
+  },
   "web_accessible_resources": [
     "images/youtube_button_36.png",
     "images/youtube_button_back_36.png"
