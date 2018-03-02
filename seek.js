@@ -431,18 +431,22 @@ function youtubeVrMain() {
                           this.gl_.RGBA, this.gl_.UNSIGNED_BYTE, videoElement);
       this.texture_.width_ = videoElement.videoWidth;
       this.texture_.height_ = videoElement.videoHeight;
+      this.texture_.currentTime_ = videoElement.currentTime;
     }
 
     getVideo() { return document.getElementsByTagName("video")[0]; }
 
     updateTexture() {
       const videoElement = this.getVideo();
+      if (this.texture_.currentTime_ == videoElement.currentTime)
+        return;
       this.gl_.bindTexture(this.gl_.TEXTURE_2D, this.texture_);
       this.gl_.pixelStorei(this.gl_.UNPACK_FLIP_Y_WEBGL, false);
       this.gl_.texSubImage2D(this.gl_.TEXTURE_2D, 0, 0, 0,
                              videoElement.videoWidth, videoElement.videoHeight,
                              this.gl_.RGBA, this.gl_.UNSIGNED_BYTE,
                              videoElement);
+      this.texture_.currentTime_ = videoElement.currentTime;
     };
 
     needInitTexture() {
