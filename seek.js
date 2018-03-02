@@ -427,9 +427,9 @@ function youtubeVrMain() {
                              this.gl_.CLAMP_TO_EDGE);
 
       // -- Allocate storage for the texture
-      this.gl_.texImage2D(this.gl_.TEXTURE_2D, 0, this.gl_.RGB,
+      this.gl_.texImage2D(this.gl_.TEXTURE_2D, 0, this.gl_.RGBA,
                           videoElement.videoWidth, videoElement.videoHeight, 0,
-                          this.gl_.RGB, this.gl_.UNSIGNED_BYTE, videoElement);
+                          this.gl_.RGBA, this.gl_.UNSIGNED_BYTE, videoElement);
       this.texture_.width_ = videoElement.videoWidth;
       this.texture_.height_ = videoElement.videoHeight;
       this.texture_.currentTime_ = videoElement.currentTime;
@@ -445,7 +445,7 @@ function youtubeVrMain() {
       this.gl_.pixelStorei(this.gl_.UNPACK_FLIP_Y_WEBGL, false);
       this.gl_.texSubImage2D(this.gl_.TEXTURE_2D, 0, 0, 0,
                              videoElement.videoWidth, videoElement.videoHeight,
-                             this.gl_.RGB, this.gl_.UNSIGNED_BYTE,
+                             this.gl_.RGBA, this.gl_.UNSIGNED_BYTE,
                              videoElement);
       this.texture_.currentTime_ = videoElement.currentTime;
     };
