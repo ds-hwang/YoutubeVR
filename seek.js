@@ -404,7 +404,7 @@ function youtubeVrMain() {
 
     initTexture() {
       // TODO(dshwang): handle the case in which video isn't loaded yet.
-      const videoElement_ = this.getVideo();
+      const videoElement = this.getVideo();
 
       if (this.texture_) {
         this.gl_.deleteTexture(this.texture_);
@@ -426,29 +426,32 @@ function youtubeVrMain() {
                              this.gl_.CLAMP_TO_EDGE);
 
       // -- Allocate storage for the texture
-      this.gl_.texImage2D(this.gl_.TEXTURE_2D, 0, this.gl_.RGBA, this.gl_.RGBA,
-                          this.gl_.UNSIGNED_BYTE, videoElement_);
-
-      this.initializedVideo_ = videoElement_;
+      this.gl_.texImage2D(this.gl_.TEXTURE_2D, 0, this.gl_.RGBA,
+                          videoElement.videoWidth, videoElement.videoHeight, 0,
+                          this.gl_.RGBA, this.gl_.UNSIGNED_BYTE, videoElement);
+      this.texture_.width_ = videoElement.videoWidth;
+      this.texture_.height_ = videoElement.videoHeight;
     }
 
     getVideo() { return document.getElementsByTagName("video")[0]; }
 
     updateTexture() {
-      const videoElement_ = this.getVideo();
+      const videoElement = this.getVideo();
       this.gl_.bindTexture(this.gl_.TEXTURE_2D, this.texture_);
       this.gl_.pixelStorei(this.gl_.UNPACK_FLIP_Y_WEBGL, false);
-      this.gl_.texSubImage2D(this.gl_.TEXTURE_2D, 0, videoElement_.width,
-                             videoElement_.height, this.gl_.RGBA,
-                             this.gl_.UNSIGNED_BYTE, videoElement_);
+      this.gl_.texSubImage2D(this.gl_.TEXTURE_2D, 0, 0, 0,
+                             videoElement.videoWidth, videoElement.videoHeight,
+                             this.gl_.RGBA, this.gl_.UNSIGNED_BYTE,
+                             videoElement);
     };
 
     needInitTexture() {
       if (!this.texture_)
         return true;
 
-      const videoElement_ = this.getVideo();
-      if (!this.initializedVideo_ || (this.initializedVideo_ != videoElement_))
+      const videoElement = this.getVideo();
+      if (this.texture_.width_ != videoElement.videoWidth ||
+          this.texture_.height_ != videoElement.videoHeight)
         return true;
 
       return false;
@@ -462,7 +465,7 @@ function youtubeVrMain() {
       if (!this.isVrMode())
         return;
 
-      if (needInitTexture()) {
+      if (this.needInitTexture()) {
         this.initTexture();
       } else {
         this.updateTexture();
