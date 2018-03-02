@@ -65,7 +65,7 @@ function youtubeVrMain() {
       this.gl_ = this.canvas_.getContext('webgl2', {antialias : true});
       const isWebGL2 = !!this.gl_;
       if (!isWebGL2) {
-        console.log('WebGL 2 is not available.');
+        console.warn('WebGL 2 is not available.');
         return;
       }
 
@@ -475,7 +475,8 @@ function youtubeVrMain() {
       const EYE_WIDTH = this.width_ * 0.5;
       const EYE_HEIGHT = this.height_;
 
-      // Get all the latest data from the VR headset and dump it into frameData.
+      // Get all the latest data from the VR headset and dump it into
+      // frameData.
       this.vr_.display.getFrameData(this.vr_.frameData);
 
       // Left eye.
@@ -492,8 +493,8 @@ function youtubeVrMain() {
       // from the WebGL context.
       this.vr_.display.submitFrame();
 
-      // Use the VR display's in-built rAF (which can be a diff refresh rate to
-      // the default browser one).
+      // Use the VR display's in-built rAF (which can be a diff refresh rate
+      // to the default browser one).
       this.vr_.display.requestAnimationFrame(this.render_);
     }
 
@@ -536,10 +537,11 @@ function youtubeVrMain() {
         console.log("WebVR isn't supported");
         return;
       }
-
       this.vrStatus_ = VR_STATUS.Normal;
       this.renderer_ = new Renderer();
       this.createPresentationButton();
+      this.readyToPlay_ = true;
+      this.addEventListeners();
     }
 
     // Video element itself
@@ -549,10 +551,7 @@ function youtubeVrMain() {
       return document.getElementsByClassName("ytp-right-controls")[0];
     }
 
-    hasVrVideo() {
-      return !!document.getElementsByClassName("webgl")[0] ? VR_VIDEO.Exist
-                                                           : VR_VIDEO.NonExist;
-    }
+    hasVrVideo() { return !!document.getElementsByClassName("webgl")[0]; }
 
     canVR() { return !(typeof VRFrameData === 'undefined'); }
 
@@ -562,10 +561,42 @@ function youtubeVrMain() {
       this.img_ = document.createElement("img");
       this.img_.src = this.vrOnImage();
       this.button_.appendChild(this.img_);
-      this.button_.addEventListener('click', _ => { this.toggleVR(); });
+      this.button_.addEventListener('click',
+                                    _ => { this.toggleVR(this.nextAction()); });
       var parentElement = this.getControlContainer();
       var theFirstButton = parentElement.firstChild;
       parentElement.insertBefore(this.button_, theFirstButton);
+      this.HideButton();
+    }
+
+    ShowButton() { this.button_.style.visibility = "visible" }
+
+    HideButton() { this.button_.style.visibility = "hidden" }
+
+    addEventListeners() {
+      // https://developers.google.com/youtube/iframe_api_reference
+      const YT_STATE = {
+        UNSTARTED : -1,
+        ENDED : 0,
+        PLAYING : 1,
+        PAUSED : 2,
+        BUFFERING : 3,
+        VIDEO_CUED : 5
+      };
+      window.addEventListener('YoutubePlayerOnStateChange', (event) => {
+        if (event.detail == YT_STATE.ENDED) {
+          this.toggleVR(VR_STATUS.Normal);
+        } else if (event.detail == YT_STATE.UNSTARTED) {
+          this.toggleVR(VR_STATUS.Normal);
+          this.HideButton();
+          this.readyToPlay_ = true;
+        } else if (this.readyToPlay_ && event.detail == YT_STATE.PLAYING) {
+          // come to here once video is ready. only once per video.
+          this.readyToPlay_ = false;
+          if (this.hasVrVideo())
+            this.ShowButton();
+        }
+      }, false);
     }
 
     vrOnImage() {
@@ -576,19 +607,13 @@ function youtubeVrMain() {
       return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4gIXBycOGGSliAAAAshJREFUWMPtlktolFcUx39njIYmJpoUhYhUqJYSdFHUjRbEhQuLFN0UfKyqtOuu2r1duHXrgy5URPCxEIr4WEkoCCEqQkEUCzFGa7AVtY1Jk/zcnMGv4yTTjBmFMgc+7us79/7v/7wuNKUp/zOJt1FWO4FSlaWxiBh9H4D6gWXAVMWehyJifz17trwlwx8BS6rMd9e7YcssGSHiX6ReAgReAP8A84B24HoNvbk1mbowTdUGdCaI+Qnu7/xGgMGIGJ8zj1dLaoe6VT2k3vZNmVInC99Uxfoz9Zy6U+1S5xeZq8lQmV71Y+B7YG/efhgYAO4CQ8Bj4GmaaxSYyIhrBRalb60APgXWA6vyiPPA8Yg4UwZU05zqMvX3vOFptVddpC6og+WWZLlXPVtg9dx0LFXbZCAVD8xE72yCodDfpI7l/rur/bwkkZ9Xd6s9hVt0z2UWLgNTD+YZfTk+oV5Qvy1lhGwHvgSeA1tSvx/4a07LwmtfuZppokdtBT4AtgJrK9P+L8Dn2f81HbURcg8YAzqAHqCvvFAENBkRT4A1Of4tIiYbBGg4GWoHlgLXKgHNA25kvytr04OGVfSIx8DLTKw9wK0ioLJhBzIDtyf64UaAKUTcQLarC77aWgL+APYDRxJtOzAO3G8QO0XHBvgsIqaA74CTleg3Z454onY18iGm7sjQ7y/OV0ZZG7AgfaqzwY/DjmwXzgRoME3YCXxVtnlFpq07S1fInmz7ahXXo8C+LJrfRMSpaQ5alcWzO5ktZd56noV3MCKGptHdBRzL4NkQETdr3erntO+EekVdl/MbczyR63+qd9QbWf9uqUPqeJaep+pP6rYs2L3q4cLT5IsZWUzzRPZ/yANepPKIelH9Wv3kP5iqLS/wo3pNfaiOJsjL6spqYKLGpouB5enowxHxqN6nqfphJt0A7kXE5Gz0m9KUpjTlXckr7/szubqtBtkAAAAASUVORK5CYII=';
     }
 
-    toggleVR() {
-      this.vrStatus_ = this.nextAction();
+    toggleVR(vrStatus) {
+      this.vrStatus_ = vrStatus;
       if (this.vrStatus_ == VR_STATUS.VR) {
-        console.log("toogleVR: VR");
         this.img_.src = this.vrOffImage();
         this.getVideo().focus();
-        this.getVideo().addEventListener("ended", _ => {
-          if (this.vrStatus_ == VR_STATUS.VR)
-            this.toggleVR(VR_STATUS.Normal);
-        }, {capture : false, once : true});
         this.renderer_.activateVR();
       } else if (this.vrStatus_ == VR_STATUS.Normal) {
-        console.log("toogleVR: Normal");
         this.img_.src = this.vrOnImage();
         this.renderer_.deactivateVR();
       }
@@ -607,21 +632,21 @@ function youtubeVrMain() {
   new WebVR();
 }
 
+function onYouTubePlayerReady(player) {
+  player.addEventListener("onStateChange", (newState) => {
+    window.dispatchEvent(
+        new CustomEvent('YoutubePlayerOnStateChange', {detail : newState}));
+  });
+}
+
 !function() {
   class WebVRContentScript {
-    constructor() {
-      window.addEventListener("beforeunload",
-                              (event) => {
-                                  // this.updateStatus(VR_VIDEO.NonExist);
-                              });
-
-      this.injectYoutubeVrMain();
-    }
+    constructor() { this.injectYoutubeVrMain(); }
 
     injectYoutubeVrMain() {
       this.script_ = document.createElement('script');
-      this.script_.appendChild(
-          document.createTextNode('(' + youtubeVrMain + ')();'));
+      this.script_.appendChild(document.createTextNode(
+          onYouTubePlayerReady.toString() + ';(' + youtubeVrMain + ')();'));
       document.documentElement.appendChild(this.script_);
     }
   }
