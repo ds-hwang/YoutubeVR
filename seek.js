@@ -63,7 +63,7 @@ function youtubeVrMain() {
       document.body.appendChild(this.canvas_);
 
       this.gl_ =
-          this.canvas_.getContext('webgl2', {antialias : false, alpha : false});
+          this.canvas_.getContext('webgl2', {antialias : false, alpha : true});
       const isWebGL2 = !!this.gl_;
       if (!isWebGL2) {
         console.warn('WebGL 2 is not available.');
