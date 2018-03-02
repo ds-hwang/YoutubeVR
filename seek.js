@@ -62,7 +62,8 @@ function youtubeVrMain() {
       this.canvas_.style.display = "none";
       document.body.appendChild(this.canvas_);
 
-      this.gl_ = this.canvas_.getContext('webgl2', {antialias : false, alpha: false});
+      this.gl_ =
+          this.canvas_.getContext('webgl2', {antialias : false, alpha : false});
       const isWebGL2 = !!this.gl_;
       if (!isWebGL2) {
         console.warn('WebGL 2 is not available.');
@@ -567,15 +568,24 @@ function youtubeVrMain() {
       this.button_.appendChild(this.img_);
       this.button_.addEventListener('click',
                                     _ => { this.toggleVR(this.nextAction()); });
-      var parentElement = this.getControlContainer();
-      var theFirstButton = parentElement.firstChild;
-      parentElement.insertBefore(this.button_, theFirstButton);
-      this.HideButton();
+
+      // youtube.com doesn't have control, so need to wait for VR video to add
+      // the button.
+      this.button_.needToAdd_ = true;
     }
 
-    ShowButton() { this.button_.style.visibility = "visible" }
+    ShowButton() {
+      this.button_.style.visibility = "visible";
 
-    HideButton() { this.button_.style.visibility = "hidden" }
+      if (this.button_.needToAdd_) {
+        var parentElement = this.getControlContainer();
+        var theFirstButton = parentElement.firstChild;
+        parentElement.insertBefore(this.button_, theFirstButton);
+        this.button_.needToAdd_ = false;
+      }
+    }
+
+    HideButton() { this.button_.style.visibility = "hidden"; }
 
     addEventListeners() {
       // https://developers.google.com/youtube/iframe_api_reference
