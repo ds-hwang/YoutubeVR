@@ -62,7 +62,7 @@ function youtubeVrMain() {
       this.canvas_.style.display = "none";
       document.body.appendChild(this.canvas_);
 
-      this.gl_ = this.canvas_.getContext('webgl2', {antialias : true});
+      this.gl_ = this.canvas_.getContext('webgl2', {antialias : false, alpha: false});
       const isWebGL2 = !!this.gl_;
       if (!isWebGL2) {
         console.warn('WebGL 2 is not available.');
@@ -426,9 +426,9 @@ function youtubeVrMain() {
                              this.gl_.CLAMP_TO_EDGE);
 
       // -- Allocate storage for the texture
-      this.gl_.texImage2D(this.gl_.TEXTURE_2D, 0, this.gl_.RGBA,
+      this.gl_.texImage2D(this.gl_.TEXTURE_2D, 0, this.gl_.RGB,
                           videoElement.videoWidth, videoElement.videoHeight, 0,
-                          this.gl_.RGBA, this.gl_.UNSIGNED_BYTE, videoElement);
+                          this.gl_.RGB, this.gl_.UNSIGNED_BYTE, videoElement);
       this.texture_.width_ = videoElement.videoWidth;
       this.texture_.height_ = videoElement.videoHeight;
       this.texture_.currentTime_ = videoElement.currentTime;
@@ -444,7 +444,7 @@ function youtubeVrMain() {
       this.gl_.pixelStorei(this.gl_.UNPACK_FLIP_Y_WEBGL, false);
       this.gl_.texSubImage2D(this.gl_.TEXTURE_2D, 0, 0, 0,
                              videoElement.videoWidth, videoElement.videoHeight,
-                             this.gl_.RGBA, this.gl_.UNSIGNED_BYTE,
+                             this.gl_.RGB, this.gl_.UNSIGNED_BYTE,
                              videoElement);
       this.texture_.currentTime_ = videoElement.currentTime;
     };
@@ -608,7 +608,7 @@ function youtubeVrMain() {
     }
 
     vrOffImage() {
-      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4gIXBycOGGSliAAAAshJREFUWMPtlktolFcUx39njIYmJpoUhYhUqJYSdFHUjRbEhQuLFN0UfKyqtOuu2r1duHXrgy5URPCxEIr4WEkoCCEqQkEUCzFGa7AVtY1Jk/zcnMGv4yTTjBmFMgc+7us79/7v/7wuNKUp/zOJt1FWO4FSlaWxiBh9H4D6gWXAVMWehyJifz17trwlwx8BS6rMd9e7YcssGSHiX6ReAgReAP8A84B24HoNvbk1mbowTdUGdCaI+Qnu7/xGgMGIGJ8zj1dLaoe6VT2k3vZNmVInC99Uxfoz9Zy6U+1S5xeZq8lQmV71Y+B7YG/efhgYAO4CQ8Bj4GmaaxSYyIhrBRalb60APgXWA6vyiPPA8Yg4UwZU05zqMvX3vOFptVddpC6og+WWZLlXPVtg9dx0LFXbZCAVD8xE72yCodDfpI7l/rur/bwkkZ9Xd6s9hVt0z2UWLgNTD+YZfTk+oV5Qvy1lhGwHvgSeA1tSvx/4a07LwmtfuZppokdtBT4AtgJrK9P+L8Dn2f81HbURcg8YAzqAHqCvvFAENBkRT4A1Of4tIiYbBGg4GWoHlgLXKgHNA25kvytr04OGVfSIx8DLTKw9wK0ioLJhBzIDtyf64UaAKUTcQLarC77aWgL+APYDRxJtOzAO3G8QO0XHBvgsIqaA74CTleg3Z454onY18iGm7sjQ7y/OV0ZZG7AgfaqzwY/DjmwXzgRoME3YCXxVtnlFpq07S1fInmz7ahXXo8C+LJrfRMSpaQ5alcWzO5ktZd56noV3MCKGptHdBRzL4NkQETdr3erntO+EekVdl/MbczyR63+qd9QbWf9uqUPqeJaep+pP6rYs2L3q4cLT5IsZWUzzRPZ/yANepPKIelH9Wv3kP5iqLS/wo3pNfaiOJsjL6spqYKLGpouB5enowxHxqN6nqfphJt0A7kXE5Gz0m9KUpjTlXckr7/szubqtBtkAAAAASUVORK5CYII=';
+      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4gMCByggGY06lQAAAWBJREFUWMPtmDFLw0AYhp+vplS6iNipIA7u4uSk4OZa3fwLgqOL4CKu4uC/ERT8Aw6OgoOTYJ1ELNamr8sFrrFKE5tE5F44yHck5Ml7ucu9gaAMklQ5gyUgZoakTeAYWAEaBd/7HbgFjszsOmHw3dlRdeqkHWoCXaDp+mOg6PGruZYoMrM4csW6B/MArAH9goEi4A6Yd/UecJ4ArXonXgBPI+NZ3CQ6AU5duUzKskT9MmCcPsaN459SAApAASgABaAA9F+A/M97vcS9dfRdx43XtwUsSnotGKYJHHr1PYA5N9Jb2CpUN7NBzcwwszdgt0KYjpkNvuQxSRuSLiX1JA0lxRO0oZceslzTk3Tlotf4TJjnZZa07wGdTXXa59xLz3rHjdLWoR/c66XSaGm5f0lSN0cq7UpqF7FSHwCtHM/SArYz/WyY0KEF4DmnwW0ze5wqkIOaAeYywryMrDFBv9Qni1uNy2IcSs8AAAAASUVORK5CYII=';
     }
 
     toggleVR(vrStatus) {
