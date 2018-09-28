@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "minimum_chrome_version": "50",
   "name": "YouTubeVR",
-  "version": "0.0.3.2",
+  "version": "0.0.3.3",
   "description": "Enabling Youtube 360 video VR-ed for HMD like Oculus and HTC Vive",
   "homepage_url": "https://github.com/ds-hwang/YoutubeVR",
   "icons": {

@@ -92,12 +92,11 @@ function youtubeVrMain() {
         return;
       if (this.vr_.display.isPresenting)
         return;
-
-      this.vr_.display.requestPresent([ {source : this.canvas_} ]).catch(e => {
+      this.vr_.display.requestPresent([ {source : this.canvas_} ]).then(() => {
+        this.vr_.display.requestAnimationFrame(this.render_);
+      }).catch(e => {
         console.error(`Unable to init VR: ${e}`);
       });
-
-      this.vr_.display.requestAnimationFrame(this.render_);
     }
 
     deactivateVR() {
@@ -129,7 +128,8 @@ function youtubeVrMain() {
         const width = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
         const height = Math.max(leftEye.renderHeight, rightEye.renderHeight);
         this.onResize(width, height);
-      });
+      })
+      .catch((reason) => { console.error("WebVR is not supported: " + reason); });
     }
 
     onResize(width, height) {
