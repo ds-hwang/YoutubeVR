@@ -2,7 +2,9 @@
 Make Youtube 360 video VR-ed by desktop Chrome. 
 
 # Published
-* [YouTubeVR in chrome web store](https://chrome.google.com/webstore/detail/youtubevr/gmknccjepdifpfalllpcffbmcpchhjln)
+* [YouTubeVR in chrome web store](https://chrome.google.com/webstore/detail/gmknccjepdifpfalllpcffbmcpchhjln)
+
+[![Alt text](https://img.youtube.com/vi/YQmTAasQqys/0.jpg)](https://www.youtube.com/watch?v=YQmTAasQqys)
 
 # Reference
 * [ContentScreen YouTube](https://github.com/ds-hwang/contentscreen_youtube)
